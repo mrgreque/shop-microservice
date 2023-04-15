@@ -1,0 +1,53 @@
+version: '3.7'
+
+services:
+  shop-microservice:
+    build: .
+    command: yarn dev
+    container_name: shop-microservice-app
+    restart: always
+    ports:
+      - 5017:4000
+    networks:
+      - backend
+    depends_on:
+      - mongo-manager
+      - mongo-tenant
+    volumes:
+      - .:/app
+    environment:
+      - MANAGER_URL=mongodb://admin:admin@mongo-manager:27017/?authMechanism=DEFAULT
+      - TENANT_URL=mongodb://admin:admin@mongo-tenant:27017/?authMechanism=DEFAULT
+  mongo-manager:
+    image: mongo:4.2
+    container_name: mongo-manager
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/db:/data/db
+    networks:
+      - backend
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=manager
+
+  mongo-tenant:
+    image: mongo:4.2
+    container_name: mongo-tenant
+    restart: always
+    ports:
+      - 27019:27017
+    volumes:
+      - ./data/db-tenant:/data/db
+    networks:
+      - backend
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=tenant
+
+networks:
+  backend:
+    driver: bridge
